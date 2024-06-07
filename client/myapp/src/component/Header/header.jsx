@@ -8,9 +8,9 @@ const Header = () => {
       aria-label="Furni navigation bar"
     >
       <div className="container">
-        <a className="navbar-brand" href="index.html">
+        <NavLink className="navbar-brand" to="/">
           Furni<span>.</span>
-        </a>
+        </NavLink>
         <button
           className="navbar-toggler"
           type="button"
@@ -70,9 +70,13 @@ const Header = () => {
 
           <ul className="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
             <li className="nav-item">
-              <a className="nav-link" href="#">
+              <NavLink
+                className="nav-link"
+                to="/signin"
+                activeClassName="active"
+              >
                 <img src="images/user.svg" alt="User" />
-              </a>
+              </NavLink>
             </li>
             <li className="nav-item">
               <NavLink className="nav-link" to="/cart" activeClassName="active">
