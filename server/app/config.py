@@ -1,8 +1,3 @@
 class Config:
-    DATABASE = {
-        'database': 'furni',
-        'user': 'postgres',
-        'password': 'postgres',
-        'host': 'localhost',
-        'port': '5432'
-    }
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost/furni'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False

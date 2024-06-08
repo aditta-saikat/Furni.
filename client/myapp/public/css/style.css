@@ -804,3 +804,9 @@ textarea {
   text-decoration: underline;
 }
 
+/* Add this to your CSS file */
+
+.error {
+  color: red;
+  margin-top: 10px;
+}

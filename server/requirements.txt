@@ -1,0 +1,6 @@
+Flask
+Flask-RESTx
+Flask-SQLAlchemy
+psycopg2-binary
+Werkzeug
+flask-cors

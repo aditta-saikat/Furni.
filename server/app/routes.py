@@ -1,64 +1,44 @@
+# app/routes.py
+
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from .db import get_db_connection
+from werkzeug.security import generate_password_hash, check_password_hash
+from .models import User
+from .extensions import db
 
-ns = Namespace('users', description='User related operations')
+ns = Namespace('users', description='User operations')
 
 user_model = ns.model('User', {
+    'id': fields.Integer(readOnly=True),
     'email': fields.String(required=True, description='The user email address'),
     'password': fields.String(required=True, description='The user password')
 })
 
 @ns.route('/')
 class UserList(Resource):
-    @ns.marshal_with(user_model, as_list=True)
+    @ns.marshal_list_with(user_model)
     def get(self):
-        """Fetch all users"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT email, password FROM users')
-        users = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return [{'email': user[0], 'password': user[1]} for user in users]
+        """List all users"""
+        return User.query.all()
 
+@ns.route('/register')
+class UserRegister(Resource):
     @ns.expect(user_model)
     def post(self):
-        """Create a new user"""
         data = request.json
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (email, password) VALUES (%s, %s)",
-            (data['email'], data['password'])
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return {'message': 'User created successfully'}, 201
+        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+        new_user = User(email=data['email'], password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        return {'message': 'User registered successfully'}, 201
 
-@ns.route('/<int:id>')
-class User(Resource):
-    @ns.marshal_with(user_model)
-    def get(self, id):
-        """Fetch a single user by ID"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT email, password FROM users WHERE id = %s', (id,))
-        user = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if user:
-            return {'email': user[0], 'password': user[1]}
+@ns.route('/login')
+class UserLogin(Resource):
+    @ns.expect(user_model)
+    def post(self):
+        data = request.json
+        user = User.query.filter_by(email=data['email']).first()
+        if user and check_password_hash(user.password, data['password']):
+            return {'message': 'Login successful'}, 200
         else:
-            ns.abort(404, "User not found")
-
-    def delete(self, id):
-        """Delete a user by ID"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM users WHERE id = %s', (id,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return {'message': 'User deleted successfully'}, 204
+            return {'message': 'Invalid email or password'}, 401
